@@ -53,7 +53,6 @@
     <td>{{ pod.metadata.name }}</td>
     <td>{{ pod.status.phase }}</td>
     <td>
-      <!-- Thread dump button -->
       <form method="post" action="/dump" style="display:inline">
         <input type="hidden" name="pod" value="{{ pod.metadata.name }}">
         <input type="hidden" name="namespace" value="{{ namespace }}">
@@ -61,8 +60,6 @@
         <input type="hidden" name="dump_type" value="thread">
         <button type="submit">Thread Dump</button>
       </form>
-
-      <!-- Heap dump button -->
       <form method="post" action="/dump" style="display:inline">
         <input type="hidden" name="pod" value="{{ pod.metadata.name }}">
         <input type="hidden" name="namespace" value="{{ namespace }}">
