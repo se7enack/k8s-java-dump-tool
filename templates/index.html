@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Java Pod Dumps</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      padding: 20px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #f4f4f4;
+    }
+    button {
+      padding: 6px 12px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    input {
+      padding: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Pods in namespace: {{ namespace }}</h2>
+
+<form method="get">
+  Namespace:
+  <input name="namespace" value="{{ namespace }}">
+  <button type="submit">Load</button>
+</form>
+
+<table>
+  <tr>
+    <th>Pod</th>
+    <th>Status</th>
+    <th>Actions</th>
+  </tr>
+
+  {% for pod in pods %}
+  <tr>
+    <td>{{ pod.metadata.name }}</td>
+    <td>{{ pod.status.phase }}</td>
+    <td>
+      <!-- Thread dump button -->
+      <form method="post" action="/dump" style="display:inline">
+        <input type="hidden" name="pod" value="{{ pod.metadata.name }}">
+        <input type="hidden" name="namespace" value="{{ namespace }}">
+        <input type="hidden" name="container" value="{{ pod.spec.containers[0].name }}">
+        <input type="hidden" name="dump_type" value="thread">
+        <button type="submit">Thread Dump</button>
+      </form>
+
+      <!-- Heap dump button -->
+      <form method="post" action="/dump" style="display:inline">
+        <input type="hidden" name="pod" value="{{ pod.metadata.name }}">
+        <input type="hidden" name="namespace" value="{{ namespace }}">
+        <input type="hidden" name="container" value="{{ pod.spec.containers[0].name }}">
+        <input type="hidden" name="dump_type" value="heap">
+        <button type="submit">Heap Dump</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+</body>
+</html>
