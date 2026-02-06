@@ -37,7 +37,8 @@ From the UI you can:
 4. Trigger a heap dump
 5. Download the generated dump files
 
-<img width="725" height="405" alt="Screenshot 2026-02-05 at 6 11 15 PM" src="https://github.com/user-attachments/assets/2afb854f-e6e5-40c6-91be-d50e09d37e0a" />
+
+<img width="715" height="449" alt="demo" src="https://github.com/user-attachments/assets/3fdf4c9c-3b1a-4293-88ab-0dfe547aefc2" />
 
 
 
