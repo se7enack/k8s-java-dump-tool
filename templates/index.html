@@ -4,63 +4,140 @@
   <meta charset="utf-8">
   <title>Java Pod Dumps</title>
   <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2933;
+      --border: #2d3748;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --danger: #ef4444;
+      --radius: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: system-ui, sans-serif;
-      padding: 20px;
+      margin: 0;
+      padding: 32px;
+      font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+      background: linear-gradient(180deg, #020617, #020617 200px, #020617);
+      color: var(--text);
     }
 
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 20px;
+    h2 {
+      margin: 0 0 16px;
+      font-weight: 600;
     }
 
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-      vertical-align: top;
-    }
-
-    th {
-      background: #f4f4f4;
+    form {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 24px;
     }
 
     select {
-      padding: 4px;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: var(--radius);
     }
 
-    /* ---- Actions layout ---- */
-    .actions {
-      display: flex;
-      gap: 16px;
-    }
-
-    .action {
-      width: 140px;
-    }
-
-    /* ---- Buttons ---- */
     button {
-      padding: 6px 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      padding: 8px 14px;
+      font-weight: 500;
       cursor: pointer;
+      transition: background 0.15s ease, transform 0.05s ease;
     }
 
-    .dump-button {
-      width: 100%;
+    button:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(1px);
     }
 
     button:disabled {
-      background: #ddd;
-      color: #666;
+      background: #374151;
+      color: #9ca3af;
       cursor: not-allowed;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+    }
+
+    th {
+      text-align: left;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 8px 12px;
+    }
+
+    td {
+      background: var(--panel);
+      padding: 14px 12px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td:first-child {
+      border-left: 1px solid var(--border);
+      border-top-left-radius: var(--radius);
+      border-bottom-left-radius: var(--radius);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+    }
+
+    td:last-child {
+      border-right: 1px solid var(--border);
+      border-top-right-radius: var(--radius);
+      border-bottom-right-radius: var(--radius);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #064e3b;
+      color: #6ee7b7;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .action {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .dump-button {
+      min-width: 130px;
     }
 
     .status {
       font-size: 12px;
-      color: #666;
-      margin-top: 4px;
-      min-height: 14px; /* prevents layout jump */
+      color: var(--muted);
+      min-height: 14px;
     }
   </style>
 
@@ -134,7 +211,13 @@
   {% for pod in pods %}
   <tr>
     <td>{{ pod.metadata.name }}</td>
-    <td>{{ pod.status.phase }}</td>
+
+    <td>
+      <span class="status-badge">
+        {{ pod.status.phase }}
+      </span>
+    </td>
+
     <td>
       <div class="actions">
         <div class="action">
