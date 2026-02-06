@@ -15,9 +15,24 @@ v1 = client.CoreV1Api()
 
 @app.route("/", methods=["GET"])
 def index():
+    # Current namespace (default if none selected)
     namespace = request.args.get("namespace", "default")
+
+    # List namespaces for dropdown
+    namespaces = [
+        ns.metadata.name
+        for ns in v1.list_namespace().items
+    ]
+
+    # List pods in selected namespace
     pods = v1.list_namespaced_pod(namespace).items
-    return render_template("index.html", pods=pods, namespace=namespace)
+
+    return render_template(
+        "index.html",
+        pods=pods,
+        namespace=namespace,
+        namespaces=namespaces,
+    )
 
 
 @app.route("/dump", methods=["POST"])
@@ -28,9 +43,8 @@ def dump():
     dump_type = request.form.get("dump_type", "thread")  # thread or heap
 
     ts = datetime.datetime.utcnow().strftime("%Y%m%d-%H%M%S")
-    pid = "1"  # always 1
+    pid = "1"  # Java PID
 
-    # Decide command and output path
     if dump_type == "thread":
         output_path = f"/tmp/thread-{ts}.txt"
         exec_cmd = ["sh", "-c", f"jcmd {pid} Thread.print > {output_path}"]
@@ -44,8 +58,8 @@ def dump():
     else:
         return "Invalid dump type", 400
 
-    # Run the jcmd inside the container
-    resp = stream(
+    # Run jcmd inside container
+    stream(
         v1.connect_get_namespaced_pod_exec,
         pod,
         namespace,
@@ -56,10 +70,8 @@ def dump():
         stdin=False,
         tty=False,
     )
-    if resp:
-        print(f"{dump_type} output:", resp)
 
-    # Stream the file safely to a temporary file
+    # Copy dump file from pod to local temp file
     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
         tmp_file_path = tmp_file.name
 
@@ -93,11 +105,11 @@ def dump():
         file_stream.close()
         tmp_file.flush()
 
-    # Cleanup temp file inside pod
+    # Remove dump file inside pod
     stream(
         v1.connect_get_namespaced_pod_exec,
         pod,
-        namespace=namespace,
+        namespace,
         container=container,
         command=["rm", "-f", output_path],
         stdout=True,
@@ -106,7 +118,6 @@ def dump():
         tty=False,
     )
 
-    # Send the file from disk
     response = send_file(
         tmp_file_path,
         mimetype=mimetype,
@@ -114,7 +125,6 @@ def dump():
         download_name=filename,
     )
 
-    # Remove temp file after sending
     @response.call_on_close
     def cleanup_temp_file():
         try:

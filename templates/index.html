@@ -8,28 +8,105 @@
       font-family: system-ui, sans-serif;
       padding: 20px;
     }
+
     table {
       border-collapse: collapse;
       width: 100%;
       margin-top: 20px;
     }
+
     th, td {
       border: 1px solid #ccc;
       padding: 8px;
       text-align: left;
+      vertical-align: top;
     }
+
     th {
       background: #f4f4f4;
     }
+
+    select {
+      padding: 4px;
+    }
+
+    /* ---- Actions layout ---- */
+    .actions {
+      display: flex;
+      gap: 16px;
+    }
+
+    .action {
+      width: 140px;
+    }
+
+    /* ---- Buttons ---- */
     button {
       padding: 6px 12px;
       cursor: pointer;
-      margin-right: 5px;
     }
-    input {
-      padding: 4px;
+
+    .dump-button {
+      width: 100%;
+    }
+
+    button:disabled {
+      background: #ddd;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    .status {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+      min-height: 14px; /* prevents layout jump */
     }
   </style>
+
+  <script>
+    async function runDump(btn, payload) {
+      const buttons = document.querySelectorAll(".dump-button");
+      buttons.forEach(b => b.disabled = true);
+
+      const status = btn.parentElement.querySelector(".status");
+      status.textContent = "Please wait…";
+
+      try {
+        const resp = await fetch("/dump", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: new URLSearchParams(payload)
+        });
+
+        if (!resp.ok) {
+          throw new Error("Dump failed");
+        }
+
+        const blob = await resp.blob();
+        const filename =
+          resp.headers.get("Content-Disposition")
+            ?.split("filename=")[1]
+            ?.replaceAll('"', "") || "dump";
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        buttons.forEach(b => b.disabled = false);
+        status.textContent = "";
+      }
+    }
+  </script>
 </head>
 <body>
 
@@ -37,7 +114,13 @@
 
 <form method="get">
   Namespace:
-  <input name="namespace" value="{{ namespace }}">
+  <select name="namespace">
+    {% for ns in namespaces %}
+      <option value="{{ ns }}" {% if ns == namespace %}selected{% endif %}>
+        {{ ns }}
+      </option>
+    {% endfor %}
+  </select>
   <button type="submit">Load</button>
 </form>
 
@@ -53,20 +136,37 @@
     <td>{{ pod.metadata.name }}</td>
     <td>{{ pod.status.phase }}</td>
     <td>
-      <form method="post" action="/dump" style="display:inline">
-        <input type="hidden" name="pod" value="{{ pod.metadata.name }}">
-        <input type="hidden" name="namespace" value="{{ namespace }}">
-        <input type="hidden" name="container" value="{{ pod.spec.containers[0].name }}">
-        <input type="hidden" name="dump_type" value="thread">
-        <button type="submit">Thread Dump</button>
-      </form>
-      <form method="post" action="/dump" style="display:inline">
-        <input type="hidden" name="pod" value="{{ pod.metadata.name }}">
-        <input type="hidden" name="namespace" value="{{ namespace }}">
-        <input type="hidden" name="container" value="{{ pod.spec.containers[0].name }}">
-        <input type="hidden" name="dump_type" value="heap">
-        <button type="submit">Heap Dump</button>
-      </form>
+      <div class="actions">
+        <div class="action">
+          <button
+            class="dump-button"
+            onclick="runDump(this, {
+              pod: '{{ pod.metadata.name }}',
+              namespace: '{{ namespace }}',
+              container: '{{ pod.spec.containers[0].name }}',
+              dump_type: 'thread'
+            })"
+          >
+            Thread Dump
+          </button>
+          <div class="status"></div>
+        </div>
+
+        <div class="action">
+          <button
+            class="dump-button"
+            onclick="runDump(this, {
+              pod: '{{ pod.metadata.name }}',
+              namespace: '{{ namespace }}',
+              container: '{{ pod.spec.containers[0].name }}',
+              dump_type: 'heap'
+            })"
+          >
+            Heap Dump
+          </button>
+          <div class="status"></div>
+        </div>
+      </div>
     </td>
   </tr>
   {% endfor %}
