@@ -10,8 +10,9 @@
 <br>
 
 ### Option 1: Using Docker (one click)
-Running:
-```bash ./runtool.sh```
+```
+bash ./runtool.sh
+```
 
 <br>
 
