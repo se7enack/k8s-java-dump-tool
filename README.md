@@ -20,8 +20,6 @@ This confuses the container as that address routes to back itself rather than th
 
 <br>
 
-<br>
-
 ### Option 2: Native Python
 ```
 python3 -m venv venv
